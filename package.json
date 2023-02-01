@@ -1,0 +1,21 @@
+{
+  "name": "mern-course-app",
+  "version": "1.0.0",
+  "description": "",
+  "main": "./server/src/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "cd ./server/cd && node index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hksabade10/mern-course-app.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/hksabade10/mern-course-app/issues"
+  },
+  "homepage": "https://github.com/hksabade10/mern-course-app#readme"
+}
