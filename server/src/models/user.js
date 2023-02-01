@@ -33,8 +33,7 @@ const userSchema = new mongoose.Schema({
     courses_enrolled: [{
             type: mongoose.Schema.Types.ObjectId,
             required: true,
-            ref: 'Course',
-            unique: true
+            ref: 'Course'
     }],
     age: {
         type: Number,
