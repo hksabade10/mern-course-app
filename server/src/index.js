@@ -2,7 +2,9 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 
-require('./db/mongoose');
+const connectDB = require('./db/mongoose');
+
+connectDB();
 
 const userRouter = require('./routers/user');
 const courseRouter = require('./routers/course');
