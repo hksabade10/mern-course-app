@@ -94,6 +94,36 @@ router.post('/courses/enroll/:id', auth, async (req, res) => {
 });
 
 
+router.delete('/courses/drop/:id', auth, async (req, res) => {
+    const id = req.params.id;
+
+    try {
+
+        const course = await Course.findOne({course_id: id});
+
+        if(!course)
+            return res.status(404).send();
+
+        const user_id = new mongoose.Types.ObjectId(req.user._id)
+        
+        if(!course.enrollee.includes(user_id))
+            return res.status(400).send();
+        
+        course.enrollee = course.enrollee.filter(id => id !== user_id);
+        await course.save();
+            
+        req.user.courses_enrolled = req.user.courses_enrolled.filter(id => id !== course._id);
+        await req.user.save();
+
+        res.send(course);
+
+    } catch(error) {
+        console.log(error);
+        res.status(500).send(error);
+    }
+});
+
+
 router.get('/courses/enrolled', auth, async (req, res) => {
 
     try {

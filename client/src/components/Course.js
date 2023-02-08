@@ -30,7 +30,6 @@ const Course = (props) => {
                 setCourseStatus(state.mode);
                 user.user.enrolledCourses.every(course => {
                     if(course.course_id === course_id) {
-                        console.log(course_id, course.course_id);
 
                         setCourseStatus("enrolled");
                         return false;
@@ -54,7 +53,6 @@ const Course = (props) => {
         } else {
             const user = JSON.parse(loggedInUser);
             const bearerToken = "Bearer " + user.token;
-            console.log(bearerToken);
 
             axios
                 .post(`/courses/enroll/${course_id}`, {} ,{
@@ -62,8 +60,7 @@ const Course = (props) => {
                 })
                 .then((res) => {
                     if (res.status === 200) {
-                        console.log("enrolled");
-
+                        
                         user.user.enrolledCourses.push({name, course_id, faculty, description});
                         localStorage.setItem('user', JSON.stringify(user));
                     
@@ -75,6 +72,36 @@ const Course = (props) => {
                 });
         }
     };
+
+    const handleDrop = (e) => {
+        e.preventDefault();
+
+        if (!loggedInUser) {
+            navigate("/login");
+        } else {
+            const user = JSON.parse(loggedInUser);
+            const bearerToken = "Bearer " + user.token;
+
+            axios
+                .delete(`/courses/drop/${course_id}`, {
+                    headers: { Authorization: bearerToken },
+                })
+                .then((res) => {
+                    if (res.status === 200) {
+                        
+                        user.user.enrolledCourses.filter(val => val.course_id !== course_id);
+                        localStorage.setItem('user', JSON.stringify(user));
+                    
+                        setCourseStatus("catalog");
+                    }
+                })
+                .catch((err) => {
+                    console.log(err);
+                });
+        }
+    }
+
+
 
     return (
         <div>
@@ -107,6 +134,7 @@ const Course = (props) => {
                             <button
                                 className="btn btn-danger btn-lg"
                                 type="button"
+                                onClick={handleDrop}
                             >
                                 Drop
                             </button>

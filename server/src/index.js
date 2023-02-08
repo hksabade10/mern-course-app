@@ -2,6 +2,8 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 
+require('dotenv').config();
+
 const connectDB = require('./db/mongoose');
 
 connectDB();
@@ -10,7 +12,7 @@ const userRouter = require('./routers/user');
 const courseRouter = require('./routers/course');
 
 const app = express();
-const port = process.env.PORT || 3001;
+const port = process.env.PORT;
 
 app.use(cors({ origin: true, credentials: true }));
 

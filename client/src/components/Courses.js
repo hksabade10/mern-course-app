@@ -22,8 +22,6 @@ const Courses = (props) => {
             const user = JSON.parse(loggedInUser);
             const bearerToken = "Bearer " + user.token;
 
-            console.log(props.mode);
-
             const path =
                 props.mode === "enrolled"
                     ? "enrolled"

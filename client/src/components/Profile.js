@@ -8,11 +8,17 @@ const Profile = () => {
     const [firstname, setFirstname] = useState("");
     const [lastname, setLastname] = useState("");
     const [username, setUsername] = useState("");
-    const [password, setPassword] = useState("");
     const [email, setEmail] = useState("");
     const [city, setCity] = useState("");
     const [state, setState] = useState("");
     const [age, setAge] = useState(0);
+
+    const [oldPassword, setOldPassword] = useState("");
+    const [newPassword, setNewPassword] = useState("");
+    const [newPasswordRepeat, setNewPasswordRepeat] = useState("");
+
+    const [profileChangeMessage, setProfileChangeMessage] = useState({message: "", status: ""});
+    const [passwordChangeMessage, setPasswordChangeMessage] = useState({message: "", status: ""});
 
     const navigate = useNavigate();
 
@@ -20,23 +26,21 @@ const Profile = () => {
         const loggedInUser = localStorage.getItem("user");
         if (!loggedInUser) {
             navigate("/login");
+        } else {
+            const user = JSON.parse(loggedInUser);
+
+            setUsername(user.user.username);
+            setEmail(user.user.email);
+            setCity(user.user.city);
+            setState(user.user.state);
+            setAge(user.user.age);
+            const [firstname, lastname] = user.user.name.split(" ");
+            setFirstname(firstname);
+            setLastname(lastname);
         }
-
-        const user = JSON.parse(loggedInUser);
-
-        setUsername(user.user.username);
-
-        const [email] = user.user.email.split("@");
-        setEmail(email);
-        setCity(user.user.city);
-        setState(user.user.state);
-        setAge(user.user.age);
-        const [firstname, lastname] = user.user.name.split(" ");
-        setFirstname(firstname);
-        setLastname(lastname);
     }, [navigate]);
 
-    const handleSubmit = (e) => {
+    const handleProfileChange = (e) => {
         e.preventDefault();
 
         const loggedInUser = localStorage.getItem("user");
@@ -50,7 +54,6 @@ const Profile = () => {
             const name = firstname + " " + lastname;
 
             const data = { name, city, state, age };
-            if (password !== "") data.password = password;
 
             axios
                 .patch("/users/me", data, {
@@ -58,6 +61,8 @@ const Profile = () => {
                 })
                 .then((res) => {
                     if (res.status === 200) {
+                        setProfileChangeMessage({message: "Account details updated successfully!", status: "success"});
+
                         localStorage.setItem(
                             "user",
                             JSON.stringify({
@@ -76,10 +81,44 @@ const Profile = () => {
         }
     };
 
-    const handleEdit = (e) => {
+    const handlePasswordChange = (e) => {
         e.preventDefault();
 
-        setIsEditable(true);
+        if (newPassword === newPasswordRepeat) {
+            const loggedInUser = localStorage.getItem("user");
+
+            if (!loggedInUser) {
+                navigate("/login");
+            } else {
+                const user = JSON.parse(loggedInUser);
+                const bearerToken = "Bearer " + user.token;
+
+                axios
+                    .patch(
+                        "/users/me/password",
+                        { oldPassword, newPassword },
+                        { headers: { Authorization: bearerToken } }
+                    )
+                    .then((res) => {
+                        if (res.status === 201) {
+                            setPasswordChangeMessage({message: "Password changed successfully! User will be logged out soon...", status: "success"});
+
+                            localStorage.setItem("user", "");
+                            setTimeout(() => {
+                                navigate("/login");
+                            }, 5000);
+                        }
+                    })
+                    .catch((err) => {
+                        console.log(err);
+                        if(err.response.status === 401) {
+                            setPasswordChangeMessage({message: "Password entered is incorrect...", status: "error"});
+                        }
+                    });
+            }
+        } else {
+            setPasswordChangeMessage({message: "New entered passwords do not match...", status: "error"})
+        }
     };
 
     return (
@@ -92,14 +131,14 @@ const Profile = () => {
             <div className="container-xl px-4 mt-4">
                 <hr className="mt-0 mb-4" />
                 <div className="row">
-                    <div className="col-xl-4">
+                    <div className="col-xl-3">
                         {/* <!-- Profile picture card--> */}
                         <div className="card mb-4 mb-xl-0">
                             <div className="card-header">Profile Picture</div>
                             <div className="card-body text-center">
                                 {/* <!-- Profile picture image--> */}
                                 <img
-                                    className="img-account-profile rounded-circle mb-2"
+                                    className="img-fluid img-account-profile rounded-circle mb-2"
                                     src="http://bootdey.com/img/Content/avatar/avatar1.png"
                                     alt=""
                                 />
@@ -108,6 +147,7 @@ const Profile = () => {
                                     JPG or PNG no larger than 5 MB
                                 </div>
                                 {/* <!-- Profile picture upload button--> */}
+                                <hr />
                                 <button
                                     className="btn btn-primary"
                                     type="button"
@@ -117,7 +157,7 @@ const Profile = () => {
                             </div>
                         </div>
                     </div>
-                    <div className="col-xl-8">
+                    <div className="col-xl-5">
                         {/* <!-- Account details card--> */}
                         <div className="card mb-4">
                             <div className="card-header">Account Details</div>
@@ -188,46 +228,18 @@ const Profile = () => {
                                         <div className="col-md-6">
                                             <label
                                                 className="small mb-1"
-                                                htmlFor="inputPassword"
+                                                htmlFor="inputEmail"
                                             >
-                                                Password
+                                                Email
                                             </label>
-                                            <div className="input-group">
-                                                <input
-                                                    type="password"
-                                                    className="form-control"
-                                                    placeholder="Password"
-                                                    value={password}
-                                                    onChange={({ target }) =>
-                                                        setPassword(
-                                                            target.value
-                                                        )
-                                                    }
-                                                    disabled={!isEditable}
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div className="row gx-3 mb-3">
-                                        <label
-                                            className="small mb-1"
-                                            htmlFor="inputEmail"
-                                        >
-                                            Email
-                                        </label>
-                                        <div className="col-md-6 input-group">
                                             <input
-                                                type="text"
+                                                type="email"
                                                 className="form-control"
                                                 id="inputEmail"
                                                 placeholder="Email ID"
                                                 value={email}
                                                 disabled={true}
                                             />
-                                            <span className="input-group-text">
-                                                @cms.ac.in
-                                            </span>
                                         </div>
                                     </div>
 
@@ -364,7 +376,7 @@ const Profile = () => {
                                         >
                                             Age
                                         </label>
-                                        <div className="col-md-4">
+                                        <div className="col-md-6">
                                             <input
                                                 type="number"
                                                 className="form-control"
@@ -378,35 +390,164 @@ const Profile = () => {
                                             />
                                         </div>
                                     </div>
+                                    <hr />
 
-                                    {isEditable && (
-                                        <p className="small mb-1 text-danger">
-                                            Leave password field blank if you
-                                            don't want to change it.
-                                        </p>
+                                    { profileChangeMessage.status === "success" && (
+                                        <div
+                                            className="alert alert-success alert-dismissible fade show"
+                                            role="alert"
+                                        >
+                                            { profileChangeMessage.message }
+                                        </div>
                                     )}
 
-                                    {/* <!-- Save changes button--> */}
                                     {isEditable && (
-                                        <button
-                                            className="btn btn-primary"
-                                            type="button"
-                                            onClick={handleSubmit}
-                                        >
-                                            Save Changes
-                                        </button>
+                                        <div className="row gx-3 mb-3 justify-content-md-end">
+                                            <div className="col-3">
+                                                <button
+                                                    className="btn btn-success w-100 mb-2"
+                                                    type="button"
+                                                    onClick={
+                                                        handleProfileChange
+                                                    }
+                                                >
+                                                    Save
+                                                </button>
+                                            </div>
+                                            <div className="col-3">
+                                                <button
+                                                    className="btn btn-outline-danger w-100 mb-2"
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setProfileChangeMessage({message: "", status: ""});
+                                                        setIsEditable(false);
+                                                    }}
+                                                >
+                                                    Cancel
+                                                </button>
+                                            </div>
+                                        </div>
                                     )}
 
                                     {/* <!-- Edit button--> */}
                                     {!isEditable && (
-                                        <button
-                                            className="btn btn-danger"
-                                            type="button"
-                                            onClick={handleEdit}
-                                        >
-                                            Edit Profile
-                                        </button>
+                                        <div className="row gx-3 mb-3 justify-content-md-end">
+                                            <div className="col-4">
+                                                <button
+                                                    className="btn btn-danger"
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setProfileChangeMessage({message: "", status: ""});
+                                                        setIsEditable(true);
+                                                    }}
+                                                >
+                                                    Edit Profile
+                                                </button>
+                                            </div>
+                                        </div>
                                     )}
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="col-xl-4">
+                        <div className="card mb-4">
+                            <div className="card-header">Change Password</div>
+                            <div className="card-body">
+                                <form>
+                                    <div className="row gx-3 mb-3">
+                                        <div className="col-md-12">
+                                            <label
+                                                className="small mb-1"
+                                                htmlFor="inputOldPassword"
+                                            >
+                                                Current Password
+                                            </label>
+                                            <input
+                                                type="password"
+                                                className="form-control"
+                                                id="inputOldPassword"
+                                                placeholder="Enter old password"
+                                                value={oldPassword}
+                                                onChange={({ target }) =>
+                                                    setOldPassword(target.value)
+                                                }
+                                                required
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="row gx-3 mb-3">
+                                        <div className="col-md-12">
+                                            <label
+                                                className="small mb-1"
+                                                htmlFor="inputNewPassword"
+                                            >
+                                                New Password
+                                            </label>
+                                            <input
+                                                type="password"
+                                                className="form-control"
+                                                id="inputNewPassword"
+                                                placeholder="Enter new password"
+                                                value={newPassword}
+                                                onChange={({ target }) =>
+                                                    setNewPassword(target.value)
+                                                }
+                                                required
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="row gx-3 mb-3">
+                                        <div className="col-md-12">
+                                            <label
+                                                className="small mb-1"
+                                                htmlFor="inputNewPasswordRepeat"
+                                            >
+                                                New Password
+                                            </label>
+                                            <input
+                                                type="password"
+                                                className="form-control"
+                                                id="inputNewPasswordRepeat"
+                                                placeholder="Enter new password (again)"
+                                                value={newPasswordRepeat}
+                                                onChange={({ target }) =>
+                                                    setNewPasswordRepeat(
+                                                        target.value
+                                                    )
+                                                }
+                                                required
+                                            />
+                                        </div>
+                                    </div>
+                                    <hr />
+                                    {passwordChangeMessage.status === "error" && (
+                                        <div
+                                            className="alert alert-danger alert-dismissible fade show"
+                                            role="alert"
+                                        >
+                                            { passwordChangeMessage.message }
+                                        </div>
+                                    )}
+                                    {passwordChangeMessage.status === "success" && (
+                                        <div
+                                            className="alert alert-success alert-dismissible fade show"
+                                            role="alert"
+                                        >
+                                            { passwordChangeMessage.message }
+                                        </div>
+                                    )}
+                                    <div className="row gx-3 mb-3 justify-content-md-center">
+                                        <div className="col-md-8">
+                                            <button
+                                                className="btn btn-success w-100 mb-2"
+                                                type="button"
+                                                onClick={handlePasswordChange}
+                                            >
+                                                Change Password
+                                            </button>
+                                        </div>
+                                    </div>
                                 </form>
                             </div>
                         </div>

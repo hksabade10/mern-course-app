@@ -3,6 +3,8 @@ const express = require('express');
 const auth = require('../middleware/auth');
 const User = require('../models/user');
 
+const bcrypt = require('bcryptjs');
+
 const router = express.Router();
 
 const getUserWithCourses = async (user) => {
@@ -148,6 +150,34 @@ router.patch('/users/me', auth, async (req, res) => {
         console.log(error);
         res.status(500).send({error: "temp"});
     }
+});
+
+
+router.patch('/users/me/password', auth, async (req, res) => {
+
+    const oldPassword = req.body.oldPassword;
+    const newPassword = req.body.newPassword;
+    
+    try {
+        
+        const isMatch = await bcrypt.compare(oldPassword, req.user.password);
+
+        if(isMatch) {
+            req.user.password = newPassword;
+
+            await req.user.save();
+            res.status(201).send({message: "Password has been changed successfully"});
+            
+        } else {
+            res.status(401).send({error: "Password is incorrect!"})
+        }
+
+
+    } catch(error) {
+        console.log(error);
+        res.status(500).send(error);
+    }
+
 });
 
 
