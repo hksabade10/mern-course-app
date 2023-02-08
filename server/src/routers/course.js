@@ -109,10 +109,10 @@ router.delete('/courses/drop/:id', auth, async (req, res) => {
         if(!course.enrollee.includes(user_id))
             return res.status(400).send();
         
-        course.enrollee = course.enrollee.filter(id => id !== user_id);
+        course.enrollee = course.enrollee.filter(id => !id.equals(user_id));
         await course.save();
             
-        req.user.courses_enrolled = req.user.courses_enrolled.filter(id => id !== course._id);
+        req.user.courses_enrolled = req.user.courses_enrolled.filter(id => !id.equals(course._id));
         await req.user.save();
 
         res.send(course);

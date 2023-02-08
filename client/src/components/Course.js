@@ -89,7 +89,7 @@ const Course = (props) => {
                 .then((res) => {
                     if (res.status === 200) {
                         
-                        user.user.enrolledCourses.filter(val => val.course_id !== course_id);
+                        user.user.enrolledCourses = user.user.enrolledCourses.filter(val => val.course_id !== course_id);
                         localStorage.setItem('user', JSON.stringify(user));
                     
                         setCourseStatus("catalog");
